@@ -1,0 +1,224 @@
+---
+import { getCollection, render } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Emblem from "../../components/Emblem.astro";
+import { collection, storyAsset, url } from "../../site";
+import "../../styles/reader.css";
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection("stories");
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const s = entry.data;
+const slug = entry.id;
+const { Content } = await render(entry);
+
+// время чтения (≈170 слов/мин) — считаем на сборке из исходного текста
+const words = (entry.body?.match(/[Ѐ-ӿa-zA-Z0-9]+/g) || []).length;
+const readMinutes = Math.max(1, Math.round(words / 170));
+
+// ── производные (повторяют reader.js buildHTML) ──
+const t = s.theme || {};
+const date = s.date || { iso: "", label: "" };
+const intro = s.intro || {};
+const decor = s.decor || {};
+const footer = s.footer || {};
+const source = footer.source || collection.source;
+const back = url("");
+const hasMusic = !!(s.music && s.music.src);
+
+const kicker = s.kicker || "Рассказ · " + (date.label || "");
+const subText = intro.sub || kicker;
+const noteText = intro.note || (hasMusic ? "♪ " + (s.music?.label || "") : "");
+
+const heroSrc = storyAsset(slug, s.hero);
+const musicSrc = hasMusic ? storyAsset(slug, s.music!.src) : "";
+
+const htmlAttrs: Record<string, string> = { "data-theme": t.mode || "night" };
+if (t.treatment) htmlAttrs["data-treatment"] = t.treatment;
+if (t.accent) htmlAttrs["data-accent"] = t.accent;
+if (t.bg) htmlAttrs["data-bg"] = t.bg;
+
+const fonts =
+  "https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&family=JetBrains+Mono:wght@400&display=swap";
+---
+<BaseLayout htmlAttrs={htmlAttrs} bodyClass="intro-open">
+  <Fragment slot="head">
+    <meta name="description" content={s.description ?? ""} />
+    <meta property="og:title" content={s.title} />
+    <meta property="og:description" content={s.ogDescription ?? s.description ?? ""} />
+    <meta property="og:type" content="article" />
+    <meta property="article:published_time" content={date.iso} />
+    <title>{s.title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href={heroSrc} fetchpriority="high" />
+    <link rel="stylesheet" href={fonts} media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href={fonts} /></noscript>
+  </Fragment>
+
+  {/* ── интро ── */}
+  <div
+    class="intro"
+    id="intro"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Начать чтение"
+  >
+    {
+      s.emblem && (
+        <div class="intro-emblem" aria-hidden="true">
+          <Emblem name={s.emblem} />
+        </div>
+      )
+    }
+    <div class="intro-title">{s.title}</div>
+    {subText && <div class="intro-sub">{subText}</div>}
+    {s.author && <div class="intro-author">{s.author}</div>}
+    <button class="intro-btn" id="introBtn">Читать</button>
+    {noteText && <div class="intro-note">{noteText}</div>}
+    <a class="intro-back" href={back}>← Антология</a>
+  </div>
+
+  {/* ── фон + декор ── */}
+  <div class="backdrop" aria-hidden="true"></div>
+  {decor.stars && <div class="stars" id="starfield" aria-hidden="true"></div>}
+  {
+    decor.earthStar && (
+      <div class="earth-star" aria-hidden="true">
+        <div class="dot" />
+        <div class="lab">{decor.earthStar}</div>
+      </div>
+    )
+  }
+
+  <div class="page">
+    <div class="kumach-bar" aria-hidden="true"></div>
+    {
+      hasMusic && (
+        <audio id="bgAudio" src={musicSrc} loop preload="none" />
+      )
+    }
+
+    {/* ── тулбар ── */}
+    <div class="toolbar" role="group" aria-label="Управление">
+      <button id="btnTheme" title="Сменить тему" aria-label="Сменить тему">
+        <svg
+          id="iconSun"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path
+            d="M12 2v2.4M12 19.6V22M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2 12h2.4M19.6 12H22M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"
+          ></path>
+        </svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+          <path
+            d="M20 14.5A8 8 0 0 1 9.5 4a0.7 0.7 0 0 0-1-0.8A9 9 0 1 0 20.8 15.5a0.7 0.7 0 0 0-.8-1Z"
+          ></path>
+        </svg>
+      </button>
+      <span class="sep"></span>
+      <button class="sz" id="btnFontDec" title="Уменьшить шрифт" aria-label="Уменьшить шрифт">А−</button>
+      <button class="sz big" id="btnFontInc" title="Увеличить шрифт" aria-label="Увеличить шрифт">А+</button>
+      {
+        hasMusic && (
+          <>
+            <span class="sep" />
+            <button
+              class="music"
+              id="btnAudio"
+              title={s.music?.label || "Музыка"}
+              aria-label="Музыка"
+            >
+              <svg id="iconNote" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 17.5a2.5 2.5 0 1 1-2.5-2.5c.55 0 1.06.18 1.5.47V5l11-2v9.5a2.5 2.5 0 1 1-2-2.45V6.2L10 7.6v9.9z" />
+              </svg>
+              <span class="eq" id="iconEq" style="display:none" aria-hidden="true">
+                <i /><i /><i /><i />
+              </span>
+            </button>
+          </>
+        )
+      }
+    </div>
+
+    {/* ── мастхед ── */}
+    <header class="masthead">
+      <div class="hero-img">
+        <img src={heroSrc} alt="" decoding="async" fetchpriority="high" />
+        <div class="hero-scrim"></div>
+        {
+          s.heroCredit && (
+            <a
+              class="img-credit"
+              href={s.heroCredit.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {s.heroCredit.text}
+            </a>
+          )
+        }
+        <div class="hero-cap">
+          <div class="inner">
+            <div class="kicker reveal d1">{kicker}</div>
+            <h1 class="title reveal d2">{s.title}</h1>
+            <div class="accent-rule reveal d3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="meta lede-meta reveal d4">
+          <time class="tick" datetime={date.iso}>{date.label}</time>
+          <span id="readTime">≈ {readMinutes} мин чтения</span>
+          {s.author && <span>{s.author}</span>}
+        </div>
+      </div>
+    </header>
+
+    {/* ── текст рассказа ── */}
+    <div class="wrap">
+      <article class="story" id="storyContent">
+        <Content />
+      </article>
+    </div>
+
+    {/* ── футер ── */}
+    <footer class="wrap colophon">
+      <div class="emblem">
+        {
+          s.emblem && (
+            <span style="color:var(--accent);display:inline-flex">
+              <Emblem name={s.emblem} />
+            </span>
+          )
+        }
+        <div class="t">
+          {footer.title || "2061"}
+          <small>{footer.sub || "будущее, до которого хочется дожить"}</small>
+        </div>
+      </div>
+      <div class="links">
+        <a href={back}>← Антология</a><br />
+        Сеттинг:{" "}
+        <a href={source.href} target="_blank" rel="noopener noreferrer">
+          {source.label}
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../../scripts/reader.ts"></script>
+</BaseLayout>

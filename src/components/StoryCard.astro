@@ -1,0 +1,86 @@
+---
+import { storyAsset, url } from "../site";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  entry: CollectionEntry<"stories">;
+  index: number;
+}
+const { entry, index } = Astro.props;
+const s = entry.data;
+const slug = entry.id;
+
+const soon = s.status === "готовится";
+const Tag = soon ? "div" : "a";
+const href = soon ? undefined : url(`stories/${slug}/`);
+
+const coverRel = s.thumb || s.hero;
+const coverSrc = coverRel ? storyAsset(slug, coverRel) : null;
+const num = String(s.number).padStart(2, "0");
+const hasAuthor = s.author && s.author !== "—";
+const delay = (0.05 + index * 0.04).toFixed(2);
+// первая карточка — eager+high, остальные — lazy
+const imgPrio =
+  index === 0
+    ? { fetchpriority: "high" as const, decoding: "async" as const }
+    : { loading: "lazy" as const, decoding: "async" as const };
+---
+<Tag
+  class:list={["card", "reveal", soon ? "soon" : "live"]}
+  style={`animation-delay:${delay}s`}
+  href={href}
+  data-tags={s.tags.join("|")}
+>
+  <div class="card-cover">
+    {coverSrc && <img src={coverSrc} alt="" {...imgPrio} />}
+    <span class="card-num">№ {num}</span>
+    {soon && <span class="card-status">готовится</span>}
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <span class="card-world">{s.world}</span>
+      {s.date?.label && <span class="card-date">{s.date.label}</span>}
+    </div>
+    <h2 class="card-title">{s.title}</h2>
+    {s.excerpt && <p class="card-excerpt">{s.excerpt}</p>}
+    <div class="card-byline">
+      {
+        soon ? (
+          <span class="soon-lbl">скоро в эфире</span>
+        ) : (
+          <>
+            {hasAuthor && <span class="author">{s.author}</span>}
+            {hasAuthor && s.minutes && <span class="dot" />}
+            {s.minutes && <span>{s.minutes} мин</span>}
+            <span class="read">
+              читать
+              <svg
+                class="arr"
+                viewBox="0 0 24 24"
+                width="13"
+                height="13"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </>
+        )
+      }
+    </div>
+    {
+      s.tags.length > 0 && (
+        <div class="card-tags">
+          {s.tags.map((t) => (
+            <span>{t}</span>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Tag>

@@ -1,0 +1,15 @@
+---
+// Инлайнит общий SVG из src/assets/emblems/<name>.svg прямо в разметку — покраска
+// идёт через currentColor (без рантайм-fetch, как было в reader.js).
+interface Props {
+  name?: string;
+}
+const { name } = Astro.props;
+const emblems = import.meta.glob<string>("../assets/emblems/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const svg = name ? emblems[`../assets/emblems/${name}.svg`] : undefined;
+---
+{svg && <Fragment set:html={svg} />}

@@ -1,0 +1,24 @@
+---
+// Каркас страницы: <html>/<head>/<body>. Метатеги, шрифты и preload каждая
+// страница задаёт через слот "head"; атрибуты <html> (тема и т.п.) — через htmlAttrs.
+interface Props {
+  htmlAttrs?: Record<string, string>;
+  bodyClass?: string;
+}
+const { htmlAttrs = {}, bodyClass } = Astro.props;
+---
+<!doctype html>
+<html lang="ru" {...htmlAttrs}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="robots"
+      content="noindex, nofollow, noarchive, nosnippet, noimageindex"
+    />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

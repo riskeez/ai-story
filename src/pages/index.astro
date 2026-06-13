@@ -1,0 +1,90 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StoryCard from "../components/StoryCard.astro";
+import { collection, storyAsset } from "../site";
+import "../styles/gallery.css";
+
+const entries = (await getCollection("stories")).sort(
+  (a, b) => (a.data.number || 0) - (b.data.number || 0)
+);
+
+// русская плюрализация числа историй
+function pluralRu(n: number, one: string, few: string, many: string) {
+  const m10 = n % 10,
+    m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+  return many;
+}
+const n = entries.length;
+const countLabel =
+  String(n).padStart(2, "0") +
+  " " +
+  pluralRu(n, "история", "истории", "историй");
+
+// набор тегов для фильтра
+const seen: string[] = [];
+entries.forEach((e) =>
+  e.data.tags.forEach((t) => {
+    if (seen.indexOf(t) === -1) seen.push(t);
+  })
+);
+const tags = ["Все", ...seen];
+
+// preload LCP-обложки первой карточки
+const first = entries[0];
+const lcp = first
+  ? storyAsset(first.id, first.data.thumb || first.data.hero)
+  : null;
+---
+<BaseLayout>
+  <Fragment slot="head">
+    <title>{collection.title}</title>
+    <meta name="description" content="Антология AI рассказов." />
+    {lcp && <link rel="preload" as="image" href={lcp} fetchpriority="high" />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=PT+Sans:wght@400&family=JetBrains+Mono:wght@400;500&display=optional"
+    />
+  </Fragment>
+
+  <div class="page">
+    <div class="bg" aria-hidden="true"></div>
+    <div class="topline" aria-hidden="true"></div>
+
+    <header class="masthead">
+      <div class="index-row">
+        <span class="k">{collection.kicker}</span>
+        <span class="count">{countLabel}</span>
+      </div>
+      <h1 class="mast-title">{collection.title}</h1>
+      {collection.tagline && <p class="tagline">{collection.tagline}</p>}
+    </header>
+
+    <nav class="filters" id="filters" aria-label="Фильтр по тегам">
+      <div class="filters-inner wrap">
+        <span class="lbl">Тема</span>
+        {
+          tags.map((t) => (
+            <button
+              class="chip"
+              data-on={t === "Все" ? "1" : "0"}
+              data-tag={t}
+            >
+              {t}
+            </button>
+          ))
+        }
+      </div>
+    </nav>
+
+    <main class="grid wrap" id="grid">
+      {entries.map((entry, i) => <StoryCard entry={entry} index={i} />)}
+    </main>
+  </div>
+
+  <script src="../scripts/gallery.ts"></script>
+</BaseLayout>
