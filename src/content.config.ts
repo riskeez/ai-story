@@ -13,7 +13,6 @@ const stories = defineCollection({
     minutes: z.number().optional(),
     hero: z.string(),
     thumb: z.string().optional(),
-    excerpt: z.string().optional(),
     tags: z.array(z.string()).default([]),
     status: z.string().default(""),
 
@@ -26,7 +25,6 @@ const stories = defineCollection({
       })
       .default({}),
     description: z.string().optional(),
-    ogDescription: z.string().optional(),
 
     heroCredit: z.object({ text: z.string(), href: z.string() }).optional(),
     music: z.object({ src: z.string(), label: z.string().optional() }).optional(),
