@@ -148,6 +148,14 @@
       once: true,
     });
     if (audio && !userPaused) audio.play().catch(() => {});
+
+    // Пока заставка растворяется — подтянуть страницу к заголовку мастхеда.
+    const anchor = document.querySelector(".masthead .hero-cap");
+    if (anchor) {
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const top = anchor.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+    }
   });
 
   // ── Анимация появления ──
