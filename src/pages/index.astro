@@ -6,7 +6,7 @@ import { collection, storyAsset } from "../site";
 import "../styles/gallery.css";
 
 const entries = (await getCollection("stories")).sort(
-  (a, b) => (a.data.number || 0) - (b.data.number || 0)
+  (a, b) => b.data.date.iso.localeCompare(a.data.date.iso)
 );
 
 // русская плюрализация числа историй
