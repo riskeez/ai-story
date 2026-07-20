@@ -19,7 +19,7 @@ function pluralRu(n: number, one: string, few: string, many: string) {
 }
 const n = entries.length;
 const countLabel =
-  String(n).padStart(2, "0") +
+  String(n) +
   " " +
   pluralRu(n, "история", "истории", "историй");
 
