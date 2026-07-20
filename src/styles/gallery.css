@@ -76,6 +76,10 @@ body {
 .index-row .k     { color: var(--accent); }
 .index-row .count { color: #b9b3a1; white-space: nowrap; }
 
+.index-row .k { display: inline-flex; align-items: center; gap: 10px; }
+.mast-logo {
+  flex: 0 0 auto; width: 28px; height: auto;
+}
 .masthead .mast-title {
   font-family: var(--font-title); font-weight: 600;
   font-size: clamp(32px, 4.4vw, 62px); line-height: .96; letter-spacing: -.02em;

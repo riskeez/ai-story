@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import StoryCard from "../components/StoryCard.astro";
-import { collection, storyAsset } from "../site";
+import { collection, storyAsset, url } from "../site";
 import "../styles/gallery.css";
 
 const entries = (await getCollection("stories")).sort(
@@ -57,7 +57,10 @@ const lcp = first
 
     <header class="masthead">
       <div class="index-row">
-        <span class="k">{collection.kicker}</span>
+        <span class="k">
+          <img class="mast-logo" src={url("logo.webp")} alt="" width="28" height="28" decoding="async" />
+          {collection.kicker}
+        </span>
         <span class="count">{countLabel}</span>
       </div>
       <h1 class="mast-title">{collection.title}</h1>
