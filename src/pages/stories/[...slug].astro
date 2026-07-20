@@ -19,10 +19,6 @@ const s = entry.data;
 const slug = entry.id;
 const { Content } = await render(entry);
 
-// время чтения (≈170 слов/мин) — считаем на сборке из исходного текста
-const words = (entry.body?.match(/[Ѐ-ӿa-zA-Z0-9]+/g) || []).length;
-const readMinutes = Math.max(1, Math.round(words / 170));
-
 // ── производные (повторяют reader.js buildHTML) ──
 const t = s.theme || {};
 const date = s.date || { iso: "", label: "" };
@@ -182,7 +178,7 @@ const fonts =
       <div class="wrap">
         <div class="meta lede-meta reveal d4">
           <time class="tick" datetime={date.iso}>{date.label}</time>
-          <span id="readTime">≈ {readMinutes} мин чтения</span>
+          <span id="readTime">≈ {s.minutes} мин чтения</span>
           {s.author && <span>{s.author}</span>}
         </div>
       </div>
