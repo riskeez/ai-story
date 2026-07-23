@@ -3,9 +3,11 @@ import { getCollection, render } from "astro:content";
 import type { GetStaticPaths } from "astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Emblem from "../../components/Emblem.astro";
-import { collection, storyAsset, url } from "../../site";
+import { collection, storyAsset, url } from "../../lib/site";
+import StoryRating from "../../components/StoryRating.astro";
 import "../../styles/reader.css";
 
+// Страница рассказа: рейтинг подгружается на клиенте.
 export const getStaticPaths = (async () => {
   const entries = await getCollection("stories");
   return entries.map((entry) => ({
@@ -80,6 +82,7 @@ const fonts =
     {subText && <div class="intro-sub">{subText}</div>}
     {s.author && <div class="intro-author">{s.author}</div>}
     <button class="intro-btn" id="introBtn">Читать</button>
+    <StoryRating slug={slug} />
     {noteText && <div class="intro-note">{noteText}</div>}
     <a class="intro-back" href={back}>← Все истории</a>
   </div>

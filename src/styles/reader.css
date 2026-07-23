@@ -337,6 +337,7 @@ body {
 .intro-btn     { animation-delay: .41s; }
 .intro-note    { animation-delay: .49s; }
 .intro-back    { animation-delay: .57s; }
+.intro .rating { margin-top: 24px; animation-delay: .45s; }
 
 /* ── REVEAL ANIMATIONS ── */
 @media (prefers-reduced-motion: no-preference) {

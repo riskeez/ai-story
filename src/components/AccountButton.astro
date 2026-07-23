@@ -1,0 +1,101 @@
+---
+import "../styles/auth.css";
+---
+<div class="account" id="account" data-state="anon">
+  <button class="acc-login" id="acc-login" type="button">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      <path d="M10 17l5-5-5-5M15 12H3" />
+    </svg>
+    <span>Войти</span>
+  </button>
+
+  <div class="acc-user" id="acc-user">
+    <img class="acc-avatar" id="acc-avatar" alt="" width="26" height="26" referrerpolicy="no-referrer" hidden />
+    <span class="acc-name" id="acc-name"></span>
+    <button class="acc-logout" id="acc-logout" type="button">Выйти</button>
+  </div>
+</div>
+
+<script>
+  import type { User } from "@supabase/supabase-js";
+  import { supabase } from "../lib/supabase";
+  import { signOut, attachLoginMenu } from "../lib/auth";
+
+  const root = document.getElementById("account")!;
+  const loginBtn = document.getElementById("acc-login")!;
+  const avatar = document.getElementById("acc-avatar") as HTMLImageElement;
+  const nameEl = document.getElementById("acc-name")!;
+  const logoutBtn = document.getElementById("acc-logout")!;
+
+  attachLoginMenu(loginBtn);
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut().catch(() => {});
+    render(null);
+  });
+
+  function render(user: User | null) {
+    root.dataset.state = user ? "auth" : "anon";
+    if (!user) return;
+    const m = user.user_metadata ?? {};
+    nameEl.textContent = m.full_name || m.name || user.email || "";
+    if (m.avatar_url) {
+      avatar.src = m.avatar_url;
+      avatar.hidden = false;
+    } else {
+      avatar.hidden = true;
+    }
+  }
+
+  supabase.auth.onAuthStateChange((_e, session) => render(session?.user ?? null));
+  supabase.auth.getUser().then(({ data }) => render(data.user));
+</script>
+
+<style>
+  .account { display: inline-flex; align-items: center; }
+  .account[data-state="anon"] .acc-user { display: none; }
+  .account[data-state="auth"] .acc-login { display: none; }
+
+  .acc-login,
+  .acc-logout {
+    cursor: pointer;
+    font: inherit;
+    border-radius: 999px;
+  }
+  .acc-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background: #fff;
+    color: #1f1f1f;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .acc-login:hover { background: #f2f2f2; }
+  .acc-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.85rem;
+  }
+  .acc-avatar { border-radius: 50%; object-fit: cover; }
+  .acc-name {
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+  }
+  .acc-logout {
+    padding: 0.25rem 0.7rem;
+    background: transparent;
+    color: inherit;
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+  .acc-logout:hover { opacity: 1; }
+</style>

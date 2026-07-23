@@ -4,15 +4,24 @@
   "private": true,
   "type": "module",
   "description": "Silver Rabbit AI Stories",
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@11.17.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
+    "@astrojs/vercel": "^11.0.3",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8",
     "astro": "^7.1.1"
   }
 }

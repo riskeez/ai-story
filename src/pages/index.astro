@@ -2,35 +2,21 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import StoryCard from "../components/StoryCard.astro";
-import { collection, storyAsset, url } from "../site";
+import AccountButton from "../components/AccountButton.astro";
+import { collection, storyAsset, url } from "../lib/site";
+import { pluralRu } from "../lib/plural";
 import "../styles/gallery.css";
 
-const entries = (await getCollection("stories")).sort(
+// Витрина: авторизация и рейтинги подгружаются на клиенте.
+const entries =(await getCollection("stories")).sort(
   (a, b) => b.data.date.iso.localeCompare(a.data.date.iso)
 );
 
-// русская плюрализация числа историй
-function pluralRu(n: number, one: string, few: string, many: string) {
-  const m10 = n % 10,
-    m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
-  return many;
-}
 const n = entries.length;
-const countLabel =
-  String(n) +
-  " " +
-  pluralRu(n, "история", "истории", "историй");
+const countLabel = `${n} ${pluralRu(n, "история", "истории", "историй")}`;
 
 // набор тегов для фильтра
-const seen: string[] = [];
-entries.forEach((e) =>
-  e.data.tags.forEach((t) => {
-    if (seen.indexOf(t) === -1) seen.push(t);
-  })
-);
-const tags = ["Все", ...seen];
+const tags = ["Все", ...new Set(entries.flatMap((e) => e.data.tags))];
 
 // preload LCP-обложки первой карточки
 const first = entries[0];
@@ -61,7 +47,10 @@ const lcp = first
           <img class="mast-logo" src={url("logo.webp")} alt="" width="28" height="28" decoding="async" />
           {collection.kicker}
         </span>
-        <span class="count">{countLabel}</span>
+        <span class="index-right">
+          <span class="count">{countLabel}</span>
+          <AccountButton />
+        </span>
       </div>
       <h1 class="mast-title">{collection.title}</h1>
       {collection.tagline && <p class="tagline">{collection.tagline}</p>}
@@ -90,4 +79,30 @@ const lcp = first
   </div>
 
   <script src="../scripts/gallery.ts"></script>
+  <script>
+    import { supabase } from "../lib/supabase";
+
+    interface RatingStat {
+      story_slug: string;
+      avg_score: number | string; // numeric отдаётся PostgREST строкой
+      votes: number;
+    }
+
+    const badges = document.querySelectorAll<HTMLElement>(".card-rating[data-slug]");
+    if (badges.length) {
+      const { data } = await supabase
+        .from("story_rating_stats")
+        .select("story_slug, avg_score, votes");
+      const stats = new Map(
+        ((data as RatingStat[] | null) ?? []).map((r) => [r.story_slug, r])
+      );
+      badges.forEach((el) => {
+        const r = stats.get(el.dataset.slug!);
+        if (r && r.votes > 0) {
+          el.innerHTML = `<span class="rt-star">★</span> ${Number(r.avg_score).toFixed(1)} · ${r.votes}`;
+          el.hidden = false;
+        }
+      });
+    }
+  </script>
 </BaseLayout>

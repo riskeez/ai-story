@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout>
+  <Fragment slot="head"><title>Вход…</title></Fragment>
+  <main style="min-height:60vh;display:grid;place-items:center;color:#ddd;font-family:system-ui">
+    <p>Входим…</p>
+  </main>
+  <script>
+    import { supabase } from "../../lib/supabase";
+
+    const next = new URL(location.href).searchParams.get("next") || "/";
+    const go = () => location.replace(next);
+
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") go();
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) go();
+    });
+    setTimeout(go, 5000);
+  </script>
+</BaseLayout>

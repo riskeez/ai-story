@@ -1,0 +1,33 @@
+.login-menu {
+  position: absolute;
+  z-index: 50;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  padding: 6px;
+  background: #14171f;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.login-menu[hidden] {
+  display: none;
+}
+.login-menu-item {
+  width: 100%;
+  padding: 8px 10px;
+  background: #fff;
+  color: #1f1f1f;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.login-menu-item:hover {
+  background: #f0f0f0;
+}

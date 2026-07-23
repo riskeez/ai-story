@@ -1,0 +1,155 @@
+---
+import "../styles/auth.css";
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+---
+<section class="rating" id="story-rating" data-slug={slug} data-state="anon" aria-live="polite">
+  <div class="rating-stars" id="stars" role="group" aria-label="Оценка от 1 до 5">
+    {[1, 2, 3, 4, 5].map((n) => (
+      <button class="star" type="button" data-score={n} aria-label={`${n} из 5`}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.1 6.5L12 17.9 6.2 20.5l1.1-6.5L2.5 9.4l6.6-.9z" />
+        </svg>
+      </button>
+    ))}
+  </div>
+
+  <div class="rating-info">
+    <span id="rating-summary" class="rating-summary"></span>
+    <button id="rt-login" class="rt-login" type="button">Войти</button>
+  </div>
+</section>
+
+<script>
+  import { supabase } from "../lib/supabase";
+  import { attachLoginMenu } from "../lib/auth";
+  import { pluralRu } from "../lib/plural";
+
+  const root = document.getElementById("story-rating") as HTMLElement;
+  const slug = root.dataset.slug!;
+  const starEls = Array.from(root.querySelectorAll<HTMLButtonElement>(".star"));
+  const summaryEl = document.getElementById("rating-summary")!;
+  const loginBtn = document.getElementById("rt-login")!;
+
+  let userId: string | null = null;
+  let myScore = 0;
+
+  attachLoginMenu(loginBtn);
+
+  const paint = (score: number) =>
+    starEls.forEach((el, i) => el.classList.toggle("on", i < score));
+
+  async function loadStats() {
+    const { data } = await supabase
+      .from("story_rating_stats")
+      .select("avg_score, votes")
+      .eq("story_slug", slug)
+      .maybeSingle();
+    const votes = Number(data?.votes ?? 0);
+    const avg = Number(data?.avg_score ?? 0);
+    summaryEl.textContent = votes
+      ? `★ ${avg.toFixed(1)} · ${votes} ${pluralRu(votes, "оценка", "оценки", "оценок")}`
+      : "";
+  }
+
+  async function loadMine() {
+    if (!userId) {
+      myScore = 0;
+      paint(0);
+      return;
+    }
+    const { data } = await supabase
+      .from("story_ratings")
+      .select("score")
+      .eq("story_slug", slug)
+      .maybeSingle();
+    myScore = data?.score ?? 0;
+    paint(myScore);
+  }
+
+  async function rate(score: number) {
+    if (!userId) return;
+    paint(score);
+    const { error } = await supabase.from("story_ratings").upsert(
+      { story_slug: slug, user_id: userId, score },
+      { onConflict: "story_slug,user_id" }
+    );
+    if (error) {
+      paint(myScore);
+      return;
+    }
+    myScore = score;
+    loadStats();
+  }
+
+  starEls.forEach((el) => {
+    const score = Number(el.dataset.score);
+    el.addEventListener("click", () => rate(score));
+    el.addEventListener("mouseenter", () => userId && paint(score));
+  });
+  root.querySelector(".rating-stars")!.addEventListener("mouseleave", () => paint(myScore));
+
+  async function refreshUser() {
+    const { data } = await supabase.auth.getUser();
+    userId = data.user?.id ?? null;
+    root.dataset.state = userId ? "auth" : "anon";
+    await loadMine();
+  }
+
+  supabase.auth.onAuthStateChange(() => refreshUser());
+  refreshUser();
+  loadStats();
+</script>
+
+<style>
+  .rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .rating[data-state="anon"] .star { cursor: default; }
+  .rating[data-state="anon"] .star:hover { transform: none; }
+  .rating-stars { display: inline-flex; gap: 0.3rem; }
+  .star {
+    background: none;
+    border: 0;
+    padding: 0.1rem;
+    cursor: pointer;
+    color: color-mix(in srgb, var(--accent, #f2c14e) 26%, transparent);
+    line-height: 0;
+    transition: color 0.12s, transform 0.08s;
+  }
+  .star:hover { transform: translateY(-1px); }
+  .star svg { width: 30px; height: 30px; fill: currentColor; }
+  .star.on { color: var(--accent, #f2c14e); }
+
+  .rating-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.5rem;
+    min-height: 1.1em;
+    font-family: "PT Sans", system-ui, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: rgba(236, 230, 214, 0.55);
+  }
+  .rating-info:empty { display: none; }
+  .rating[data-state="auth"] .rt-login { display: none; }
+
+  .rt-login {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: rgba(236, 230, 214, 0.65);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .rt-login:hover { color: #e6b34a; }
+</style>

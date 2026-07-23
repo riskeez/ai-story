@@ -1,5 +1,5 @@
 ---
-import { storyAsset, url } from "../site";
+import { storyAsset, url } from "../lib/site";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -35,6 +35,7 @@ const imgPrio =
     {coverSrc && <img src={coverSrc} alt="" {...imgPrio} />}
     <span class="card-num">№ {num}</span>
     {soon && <span class="card-status">готовится</span>}
+    {!soon && <span class="card-rating" data-slug={slug} hidden></span>}
   </div>
   <div class="card-body">
     <div class="card-head">

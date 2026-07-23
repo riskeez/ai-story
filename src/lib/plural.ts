@@ -1,0 +1,13 @@
+// Русская плюрализация: 1 оценка, 2 оценки, 5 оценок.
+export function pluralRu(
+  n: number,
+  one: string,
+  few: string,
+  many: string
+): string {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+  return many;
+}
