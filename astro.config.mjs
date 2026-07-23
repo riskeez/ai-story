@@ -2,10 +2,9 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 
-// Деплой — GitHub Pages, проектная страница: https://riskeez.github.io/ai-story/
+// Деплой — Vercel: https://silver-rabbit.vercel.app/
 export default defineConfig({
-  site: "https://riskeez.github.io",
-  base: "/ai-story",
+  site: "https://silver-rabbit.vercel.app",
   integrations: [mdx()],
   build: {
     inlineStylesheets: "always",

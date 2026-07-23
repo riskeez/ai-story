@@ -5,8 +5,8 @@ export const collection = {
   tagline:
     "Все миры вымышлены, а любые совпадения с реальными людьми и событиями — случайны.",
   source: {
-    label: "https://riskeez.github.io/ai-story/",
-    href: "https://riskeez.github.io/ai-story/",
+    label: "https://silver-rabbit.vercel.app/",
+    href: "https://silver-rabbit.vercel.app/",
   },
 };
 

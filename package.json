@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "Антология ИИ-рассказов на Astro (GitHub Pages)",
+  "description": "Silver Rabbit AI Stories",
   "packageManager": "pnpm@10.18.0",
   "scripts": {
     "dev": "astro dev",
