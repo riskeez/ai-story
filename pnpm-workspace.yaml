@@ -1,0 +1,4 @@
+# pnpm 11: build-script approval (replaces the removed onlyBuiltDependencies).
+allowBuilds:
+  esbuild: true
+  sharp: true

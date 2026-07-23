@@ -11,12 +11,6 @@
     "preview": "astro preview",
     "astro": "astro"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ]
-  },
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
     "@astrojs/vercel": "^11.0.3",
