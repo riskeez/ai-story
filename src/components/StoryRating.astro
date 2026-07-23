@@ -23,8 +23,9 @@ const { slug } = Astro.props;
 </section>
 
 <script>
-  import { supabase } from "../lib/supabase";
+  import type { SupabaseClient } from "@supabase/supabase-js";
   import { attachLoginMenu } from "../lib/auth";
+  import { fetchStats } from "../lib/ratings";
   import { pluralRu } from "../lib/plural";
 
   const root = document.getElementById("story-rating") as HTMLElement;
@@ -35,6 +36,7 @@ const { slug } = Astro.props;
 
   let userId: string | null = null;
   let myScore = 0;
+  let sb: SupabaseClient | null = null; // тяжёлый клиент — только для вошедших
 
   attachLoginMenu(loginBtn);
 
@@ -42,25 +44,21 @@ const { slug } = Astro.props;
     starEls.forEach((el, i) => el.classList.toggle("on", i < score));
 
   async function loadStats() {
-    const { data } = await supabase
-      .from("story_rating_stats")
-      .select("avg_score, votes")
-      .eq("story_slug", slug)
-      .maybeSingle();
-    const votes = Number(data?.votes ?? 0);
-    const avg = Number(data?.avg_score ?? 0);
+    const data = await fetchStats(slug);
+    const votes = data?.votes ?? 0;
+    const avg = data?.avg_score ?? 0;
     summaryEl.textContent = votes
       ? `★ ${avg.toFixed(1)} · ${votes} ${pluralRu(votes, "оценка", "оценки", "оценок")}`
       : "";
   }
 
   async function loadMine() {
-    if (!userId) {
+    if (!sb || !userId) {
       myScore = 0;
       paint(0);
       return;
     }
-    const { data } = await supabase
+    const { data } = await sb
       .from("story_ratings")
       .select("score")
       .eq("story_slug", slug)
@@ -70,9 +68,9 @@ const { slug } = Astro.props;
   }
 
   async function rate(score: number) {
-    if (!userId) return;
+    if (!sb || !userId) return;
     paint(score);
-    const { error } = await supabase.from("story_ratings").upsert(
+    const { error } = await sb.from("story_ratings").upsert(
       { story_slug: slug, user_id: userId, score },
       { onConflict: "story_slug,user_id" }
     );
@@ -92,15 +90,21 @@ const { slug } = Astro.props;
   root.querySelector(".rating-stars")!.addEventListener("mouseleave", () => paint(myScore));
 
   async function refreshUser() {
-    const { data } = await supabase.auth.getUser();
+    const { data } = await sb!.auth.getUser();
     userId = data.user?.id ?? null;
     root.dataset.state = userId ? "auth" : "anon";
     await loadMine();
   }
 
-  supabase.auth.onAuthStateChange(() => refreshUser());
-  refreshUser();
   loadStats();
+
+  // Личная оценка и голосование требуют авторизации — supabase-js грузим
+  // лениво и только при наличии auth-cookie.
+  if (document.cookie.includes("-auth-token")) {
+    sb = (await import("../lib/supabase")).supabase;
+    sb.auth.onAuthStateChange(() => refreshUser());
+    refreshUser();
+  }
 </script>
 
 <style>

@@ -1,20 +1,22 @@
 import type { Provider } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
 
 // Провайдеры входа. Добавить новый — одна строка (напр. { id: "azure", label: "Microsoft" }).
 export const PROVIDERS: { id: Provider; label: string }[] = [
   { id: "google", label: "Продолжить с Google" },
 ];
 
-export function signInWith(
+// Тяжёлый supabase-js подгружаем лениво — только при самом входе/выходе.
+export async function signInWith(
   provider: Provider,
   next = location.pathname + location.search
 ) {
+  const { supabase } = await import("./supabase");
   const redirectTo = `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
   return supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
 }
 
-export function signOut() {
+export async function signOut() {
+  const { supabase } = await import("./supabase");
   return supabase.auth.signOut();
 }
 

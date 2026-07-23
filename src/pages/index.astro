@@ -23,6 +23,9 @@ const first = entries[0];
 const lcp = first
   ? storyAsset(first.id, first.data.thumb || first.data.hero)
   : null;
+
+const fonts =
+  "https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=PT+Sans:wght@400&family=JetBrains+Mono:wght@400;500&display=optional";
 ---
 <BaseLayout>
   <Fragment slot="head">
@@ -31,10 +34,8 @@ const lcp = first
     {lcp && <link rel="preload" as="image" href={lcp} fetchpriority="high" />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=PT+Sans:wght@400&family=JetBrains+Mono:wght@400;500&display=optional"
-    />
+    <link rel="stylesheet" href={fonts} media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href={fonts} /></noscript>
   </Fragment>
 
   <div class="page">
@@ -80,26 +81,15 @@ const lcp = first
 
   <script src="../scripts/gallery.ts"></script>
   <script>
-    import { supabase } from "../lib/supabase";
-
-    interface RatingStat {
-      story_slug: string;
-      avg_score: number | string; // numeric отдаётся PostgREST строкой
-      votes: number;
-    }
+    import { fetchAllStats } from "../lib/ratings";
 
     const badges = document.querySelectorAll<HTMLElement>(".card-rating[data-slug]");
     if (badges.length) {
-      const { data } = await supabase
-        .from("story_rating_stats")
-        .select("story_slug, avg_score, votes");
-      const stats = new Map(
-        ((data as RatingStat[] | null) ?? []).map((r) => [r.story_slug, r])
-      );
+      const stats = new Map((await fetchAllStats()).map((r) => [r.story_slug, r]));
       badges.forEach((el) => {
         const r = stats.get(el.dataset.slug!);
         if (r && r.votes > 0) {
-          el.innerHTML = `<span class="rt-star">★</span> ${Number(r.avg_score).toFixed(1)} · ${r.votes}`;
+          el.innerHTML = `<span class="rt-star">★</span> ${r.avg_score.toFixed(1)} · ${r.votes}`;
           el.hidden = false;
         }
       });

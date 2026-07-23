@@ -19,7 +19,6 @@ import "../styles/auth.css";
 
 <script>
   import type { User } from "@supabase/supabase-js";
-  import { supabase } from "../lib/supabase";
   import { signOut, attachLoginMenu } from "../lib/auth";
 
   const root = document.getElementById("account")!;
@@ -48,8 +47,13 @@ import "../styles/auth.css";
     }
   }
 
-  supabase.auth.onAuthStateChange((_e, session) => render(session?.user ?? null));
-  supabase.auth.getUser().then(({ data }) => render(data.user));
+  // supabase-js грузим только для уже вошедших — по наличию auth-cookie.
+  // Анонимные посетители не тянут тяжёлый клиент вовсе.
+  if (document.cookie.includes("-auth-token")) {
+    const { supabase } = await import("../lib/supabase");
+    supabase.auth.onAuthStateChange((_e, session) => render(session?.user ?? null));
+    supabase.auth.getUser().then(({ data }) => render(data.user));
+  }
 </script>
 
 <style>
