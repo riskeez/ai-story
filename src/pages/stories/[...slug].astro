@@ -6,6 +6,7 @@ import Emblem from "../../components/Emblem.astro";
 import { collection, storyAsset, url } from "../../lib/site";
 import StoryRating from "../../components/StoryRating.astro";
 import "../../styles/reader.css";
+import "../../styles/fonts-reader.css";
 
 // Страница рассказа: рейтинг подгружается на клиенте.
 export const getStaticPaths = (async () => {
@@ -43,8 +44,6 @@ if (t.treatment) htmlAttrs["data-treatment"] = t.treatment;
 if (t.accent) htmlAttrs["data-accent"] = t.accent;
 if (t.bg) htmlAttrs["data-bg"] = t.bg;
 
-const fonts =
-  "https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&family=JetBrains+Mono:wght@400&display=swap";
 ---
 <BaseLayout htmlAttrs={htmlAttrs} bodyClass="intro-open">
   <Fragment slot="head">
@@ -55,11 +54,9 @@ const fonts =
     <meta property="article:published_time" content={date.iso} />
     <title>{s.title}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="image" href={heroSrc} fetchpriority="high" />
-    <link rel="stylesheet" href={fonts} media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href={fonts} /></noscript>
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/oswald-700-cyrillic.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/pt-serif-400-cyrillic.woff2" crossorigin />
   </Fragment>
 
   {/* ── интро ── */}

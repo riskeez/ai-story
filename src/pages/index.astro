@@ -6,6 +6,7 @@ import AccountButton from "../components/AccountButton.astro";
 import { collection, storyAsset, url } from "../lib/site";
 import { pluralRu } from "../lib/plural";
 import "../styles/gallery.css";
+import "../styles/fonts-gallery.css";
 
 // Витрина: авторизация и рейтинги подгружаются на клиенте.
 const entries =(await getCollection("stories")).sort(
@@ -23,19 +24,14 @@ const first = entries[0];
 const lcp = first
   ? storyAsset(first.id, first.data.thumb || first.data.hero)
   : null;
-
-const fonts =
-  "https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=PT+Sans:wght@400&family=JetBrains+Mono:wght@400;500&display=optional";
 ---
 <BaseLayout>
   <Fragment slot="head">
     <title>{collection.title}</title>
     <meta name="description" content="Антология AI рассказов." />
     {lcp && <link rel="preload" as="image" href={lcp} fetchpriority="high" />}
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href={fonts} media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href={fonts} /></noscript>
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/spectral-600-cyrillic.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/pt-sans-400-cyrillic.woff2" crossorigin />
   </Fragment>
 
   <div class="page">
