@@ -1,9 +1,16 @@
 ---
 import "../styles/auth.css";
+import { pluralRu } from "../lib/plural";
+import type { RatingStat } from "../lib/ratings";
 interface Props {
   slug: string;
+  stat?: RatingStat | null;
 }
-const { slug } = Astro.props;
+const { slug, stat } = Astro.props;
+const votes = stat?.votes ?? 0;
+const summary = votes
+  ? `★ ${stat!.avg_score.toFixed(1)} · ${votes} ${pluralRu(votes, "оценка", "оценки", "оценок")}`
+  : "";
 ---
 <section class="rating" id="story-rating" data-slug={slug} data-state="anon" aria-live="polite">
   <div class="rating-stars" id="stars" role="group" aria-label="Оценка от 1 до 5">
@@ -17,7 +24,7 @@ const { slug } = Astro.props;
   </div>
 
   <div class="rating-info">
-    <span id="rating-summary" class="rating-summary"></span>
+    <span id="rating-summary" class="rating-summary">{summary}</span>
     <button id="rt-login" class="rt-login" type="button">Войти</button>
   </div>
 </section>
@@ -25,7 +32,6 @@ const { slug } = Astro.props;
 <script>
   import type { SupabaseClient } from "@supabase/supabase-js";
   import { attachLoginMenu } from "../lib/auth";
-  import { fetchStats } from "../lib/ratings";
   import { pluralRu } from "../lib/plural";
 
   const root = document.getElementById("story-rating") as HTMLElement;
@@ -36,7 +42,7 @@ const { slug } = Astro.props;
 
   let userId: string | null = null;
   let myScore = 0;
-  let sb: SupabaseClient | null = null; // тяжёлый клиент — только для вошедших
+  let sb: SupabaseClient | null = null; // heavy client — signed-in users only
 
   attachLoginMenu(loginBtn);
 
@@ -44,6 +50,7 @@ const { slug } = Astro.props;
     starEls.forEach((el, i) => el.classList.toggle("on", i < score));
 
   async function loadStats() {
+    const { fetchStats } = await import("../lib/ratings");
     const data = await fetchStats(slug);
     const votes = data?.votes ?? 0;
     const avg = data?.avg_score ?? 0;
@@ -96,10 +103,11 @@ const { slug } = Astro.props;
     await loadMine();
   }
 
+  // Summary is rendered at build time; refresh it with the latest votes.
   loadStats();
 
-  // Личная оценка и голосование требуют авторизации — supabase-js грузим
-  // лениво и только при наличии auth-cookie.
+  // Personal score and voting need auth — load supabase-js lazily,
+  // only when an auth cookie is present.
   if (document.cookie.includes("-auth-token")) {
     sb = (await import("../lib/supabase")).supabase;
     sb.auth.onAuthStateChange(() => refreshUser());

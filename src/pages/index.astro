@@ -5,12 +5,17 @@ import StoryCard from "../components/StoryCard.astro";
 import AccountButton from "../components/AccountButton.astro";
 import { collection, storyAsset, url } from "../lib/site";
 import { pluralRu } from "../lib/plural";
+import { fetchAllStats } from "../lib/ratings";
 import "../styles/gallery.css";
 import "../styles/fonts-gallery.css";
 
-// Витрина: авторизация и рейтинги подгружаются на клиенте.
 const entries =(await getCollection("stories")).sort(
   (a, b) => b.data.date.iso.localeCompare(a.data.date.iso)
+);
+
+// Ratings baked in at build time; refreshed in the background on the client.
+const ratingStats = new Map(
+  (await fetchAllStats().catch(() => [])).map((r) => [r.story_slug, r])
 );
 
 const n = entries.length;
@@ -71,23 +76,22 @@ const lcp = first
     </nav>
 
     <main class="grid wrap" id="grid">
-      {entries.map((entry, i) => <StoryCard entry={entry} index={i} />)}
+      {entries.map((entry, i) => <StoryCard entry={entry} index={i} stat={ratingStats.get(entry.id)} />)}
     </main>
   </div>
 
   <script src="../scripts/gallery.ts"></script>
   <script>
-    import { fetchAllStats } from "../lib/ratings";
-
+    // Badges are rendered at build time; refresh them with the latest votes.
     const badges = document.querySelectorAll<HTMLElement>(".card-rating[data-slug]");
     if (badges.length) {
+      const { fetchAllStats } = await import("../lib/ratings");
       const stats = new Map((await fetchAllStats()).map((r) => [r.story_slug, r]));
       badges.forEach((el) => {
         const r = stats.get(el.dataset.slug!);
-        if (r && r.votes > 0) {
-          el.innerHTML = `<span class="rt-star">★</span> ${r.avg_score.toFixed(1)} · ${r.votes}`;
-          el.hidden = false;
-        }
+        const show = !!r && r.votes > 0;
+        if (show) el.innerHTML = `<span class="rt-star">★</span> ${r!.avg_score.toFixed(1)} · ${r!.votes}`;
+        el.hidden = !show;
       });
     }
   </script>

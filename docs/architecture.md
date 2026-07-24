@@ -19,8 +19,11 @@ authentication and ratings run through Supabase.
 **Fully static** (`output: "static"`): every page is compiled to HTML at build
 time and served from Vercel's CDN — no serverless functions are deployed.
 
-Dynamic data arrives **on the client**: ratings and sign-in state are fetched from
-Supabase after the page loads, which lets the HTML be cached as static output.
+Ratings are read from Supabase **at build time** and baked into the HTML, then
+refreshed in the background on the client to pick up votes cast since the last
+deploy. Sign-in state is resolved on the client. The pages stay cacheable as
+static output, and the displayed ratings never depend on a request finishing
+after load.
 
 `build.format: "directory"` produces trailing-slash URLs (`/stories/<slug>/`).
 
@@ -44,7 +47,8 @@ src/
 │  ├─ site.ts             collection metadata + url()/storyAsset() helpers
 │  ├─ plural.ts           Russian number pluralization
 │  ├─ auth.ts             providers, signInWith/signOut, login menu
-│  └─ supabase.ts         browser Supabase client
+│  ├─ ratings.ts          public rating aggregates via PostgREST fetch (no supabase-js)
+│  └─ supabase.ts         browser Supabase client (loaded lazily)
 ├─ scripts/               client entry scripts (loaded via <script src>)
 │  ├─ gallery.ts          gallery filter + sticky toolbar
 │  └─ reader.ts           theme, font size, starfield, music, splash screen
@@ -76,14 +80,27 @@ Markup is rendered on the server; JavaScript only "hydrates" the existing DOM:
 - **Reader** (`scripts/reader.ts`) — theme (persisted in `localStorage`), font size,
   starfield generation, background music, splash screen, reveal animation.
 - **Rating** (`StoryRating.astro`) and **account** (`AccountButton.astro`) — inline
-  `<script>` inside the component, talking to Supabase from the client.
+  `<script>` per component. Rating values are pre-rendered at build time and only
+  refreshed here; the Supabase client is loaded lazily for sign-in and for
+  submitting a vote.
 
 ## Auth and ratings
 
-Entirely client-side through Supabase. The client is `supabase` from
-[`src/lib/supabase.ts`](../src/lib/supabase.ts); sign-in actions and
-the provider menu live in [`src/lib/auth.ts`](../src/lib/auth.ts). The database
-schema, RLS policies, OAuth flow, and every query are documented in
+**Ratings are read at build time.** Public aggregates (`story_rating_stats`) are
+fetched during the build and rendered into the static HTML, so the gallery badges
+and the story summary are present on first paint. A background refresh on the
+client then updates them with any votes cast since the last deploy. This was a
+deliberate move away from a client-only fetch: the displayed values no longer
+depend on a request completing after load — nothing on the critical path, no
+layout shift — while liveness is kept by the refresh. Reads use a plain `fetch()`
+to PostgREST ([`src/lib/ratings.ts`](../src/lib/ratings.ts)), so the display path
+never loads `supabase-js`.
+
+The full Supabase client ([`src/lib/supabase.ts`](../src/lib/supabase.ts)) is
+loaded lazily and only when actually needed — signing in/out and submitting a
+vote — and only for visitors who already have a session. Sign-in actions and the
+provider menu live in [`src/lib/auth.ts`](../src/lib/auth.ts). The database schema,
+RLS policies, OAuth flow, and every query are documented in
 [`supabase.md`](./supabase.md).
 
 Key design point: private ratings (`story_ratings`, RLS scoped to the owning user)

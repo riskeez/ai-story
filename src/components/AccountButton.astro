@@ -47,8 +47,8 @@ import "../styles/auth.css";
     }
   }
 
-  // supabase-js грузим только для уже вошедших — по наличию auth-cookie.
-  // Анонимные посетители не тянут тяжёлый клиент вовсе.
+  // Load supabase-js only for signed-in users (auth cookie present);
+  // anonymous visitors never fetch the heavy client.
   if (document.cookie.includes("-auth-token")) {
     const { supabase } = await import("../lib/supabase");
     supabase.auth.onAuthStateChange((_e, session) => render(session?.user ?? null));

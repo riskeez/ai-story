@@ -9,8 +9,8 @@ export interface RatingStat {
   votes: number;
 }
 
-// Публичные агрегаты читаем прямым запросом к PostgREST — без тяжёлого
-// supabase-js. RLS-политика "stats are public" открывает select для anon.
+// Public aggregates read straight from PostgREST — no supabase-js.
+// RLS policy "stats are public" allows anon select.
 async function restGet(query: string): Promise<RatingStat[]> {
   const res = await fetch(
     `${PUBLIC_SUPABASE_URL}/rest/v1/story_rating_stats?${query}`,
@@ -25,7 +25,7 @@ async function restGet(query: string): Promise<RatingStat[]> {
   const rows = (await res.json()) as Record<string, unknown>[];
   return rows.map((r) => ({
     story_slug: String(r.story_slug),
-    avg_score: Number(r.avg_score), // numeric отдаётся строкой
+    avg_score: Number(r.avg_score), // numeric comes back as a string
     votes: Number(r.votes),
   }));
 }

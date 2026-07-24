@@ -5,7 +5,7 @@ export const PROVIDERS: { id: Provider; label: string }[] = [
   { id: "google", label: "Продолжить с Google" },
 ];
 
-// Тяжёлый supabase-js подгружаем лениво — только при самом входе/выходе.
+// supabase-js is loaded lazily — only on actual sign-in/out.
 export async function signInWith(
   provider: Provider,
   next = location.pathname + location.search

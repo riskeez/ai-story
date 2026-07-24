@@ -1,12 +1,15 @@
 ---
 import { storyAsset, url } from "../lib/site";
 import type { CollectionEntry } from "astro:content";
+import type { RatingStat } from "../lib/ratings";
 
 interface Props {
   entry: CollectionEntry<"stories">;
   index: number;
+  stat?: RatingStat;
 }
-const { entry, index } = Astro.props;
+const { entry, index, stat } = Astro.props;
+const showRating = !!stat && stat.votes > 0;
 const s = entry.data;
 const slug = entry.id;
 
@@ -35,7 +38,11 @@ const imgPrio =
     {coverSrc && <img src={coverSrc} alt="" {...imgPrio} />}
     <span class="card-num">№ {num}</span>
     {soon && <span class="card-status">готовится</span>}
-    {!soon && <span class="card-rating" data-slug={slug} hidden></span>}
+    {!soon && (
+      <span class="card-rating" data-slug={slug} hidden={!showRating}>
+        {showRating && <><span class="rt-star">★</span> {stat!.avg_score.toFixed(1)} · {stat!.votes}</>}
+      </span>
+    )}
   </div>
   <div class="card-body">
     <div class="card-head">

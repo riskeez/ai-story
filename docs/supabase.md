@@ -71,24 +71,24 @@ be a `SECURITY DEFINER` view here — it was replaced to silence a linter warnin
 
 ## Calls from the app
 
-Client — `supabase` from [`src/lib/supabase.ts`](../src/lib/supabase.ts).
+Two access paths:
 
-**Average score of a story** — splash screen ([`StoryRating.astro`](../src/components/StoryRating.astro)):
+- **Public aggregates** (`story_rating_stats`) are read with a plain `fetch()` to
+  PostgREST — [`src/lib/ratings.ts`](../src/lib/ratings.ts), no `supabase-js`. These
+  run **at build time** (values are rendered into the static HTML) and again as a
+  background refresh on the client. See
+  [architecture.md](./architecture.md#auth-and-ratings).
+- **Private reads/writes and auth** use the full client — `supabase` from
+  [`src/lib/supabase.ts`](../src/lib/supabase.ts), loaded lazily only when needed.
 
-```ts
-supabase.from("story_rating_stats")
-  .select("avg_score, votes")
-  .eq("story_slug", slug)
-  .maybeSingle();
+**Aggregates — gallery cards ([`index.astro`](../src/pages/index.astro)) and story
+summary ([`StoryRating.astro`](../src/components/StoryRating.astro))** (`lib/ratings.ts`, PostgREST):
+
+```
+GET /rest/v1/story_rating_stats?select=story_slug,avg_score,votes
 ```
 
-**All aggregates for the gallery** — cards ([`index.astro`](../src/pages/index.astro)):
-
-```ts
-supabase.from("story_rating_stats").select("story_slug, avg_score, votes");
-```
-
-**The user's own rating** (requires sign-in):
+**The user's own rating** (requires sign-in, lazy client):
 
 ```ts
 supabase.from("story_ratings")
@@ -97,7 +97,7 @@ supabase.from("story_ratings")
   .maybeSingle();
 ```
 
-**Set / change a rating**:
+**Set / change a rating** (lazy client):
 
 ```ts
 supabase.from("story_ratings").upsert(
@@ -106,7 +106,7 @@ supabase.from("story_ratings").upsert(
 );
 ```
 
-**Authentication**:
+**Authentication** (lazy client):
 
 ```ts
 supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });

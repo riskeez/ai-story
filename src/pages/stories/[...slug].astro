@@ -5,10 +5,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Emblem from "../../components/Emblem.astro";
 import { collection, storyAsset, url } from "../../lib/site";
 import StoryRating from "../../components/StoryRating.astro";
+import { fetchStats } from "../../lib/ratings";
 import "../../styles/reader.css";
 import "../../styles/fonts-reader.css";
 
-// Страница рассказа: рейтинг подгружается на клиенте.
 export const getStaticPaths = (async () => {
   const entries = await getCollection("stories");
   return entries.map((entry) => ({
@@ -21,6 +21,9 @@ const { entry } = Astro.props;
 const s = entry.data;
 const slug = entry.id;
 const { Content } = await render(entry);
+
+// Rating baked in at build time; refreshed in the background on the client.
+const ratingStat = await fetchStats(slug).catch(() => null);
 
 // ── производные (повторяют reader.js buildHTML) ──
 const t = s.theme || {};
@@ -79,7 +82,7 @@ if (t.bg) htmlAttrs["data-bg"] = t.bg;
     {subText && <div class="intro-sub">{subText}</div>}
     {s.author && <div class="intro-author">{s.author}</div>}
     <button class="intro-btn" id="introBtn">Читать</button>
-    <StoryRating slug={slug} />
+    <StoryRating slug={slug} stat={ratingStat} />
     {noteText && <div class="intro-note">{noteText}</div>}
     <a class="intro-back" href={back}>← Все истории</a>
   </div>
