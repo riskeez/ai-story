@@ -1,0 +1,166 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import "../../styles/gallery.css";
+import "../../styles/fonts-gallery.css";
+import "../../styles/legal.css";
+
+const lastUpdated = "July 24, 2026";
+const contactEmail = "silverrabbit.legal@gmail.com";
+const owner = "Silver";
+const siteUrl = "https://silver-rabbit.vercel.app";
+---
+
+<BaseLayout>
+  <title slot="head">Privacy Policy</title>
+
+  <div class="bg" aria-hidden="true"></div>
+  <div class="topline" aria-hidden="true"></div>
+
+  <main class="legal">
+    <p class="eyebrow">Silver Rabbit</p>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: {lastUpdated}</p>
+
+    <p>
+      This Privacy Policy explains how {owner} (“we”, “us”) collects, uses, and
+      protects your information when you use this website ({siteUrl}) (the
+      “Service”). By using the Service you agree to the practices described here.
+    </p>
+
+    <h2>1. Information we collect</h2>
+    <p>We only collect the minimum data needed to operate the Service.</p>
+    <ul>
+      <li>
+        <strong>Account data (via Google Sign-In).</strong> When you sign in with
+        Google, our authentication provider receives your email address, name,
+        profile picture URL, and a unique Google account identifier. We do not
+        receive your Google password.
+      </li>
+      <li>
+        <strong>Activity data.</strong> When you rate a story, we store your
+        account identifier together with the story identifier and the rating
+        score you gave.
+      </li>
+      <li>
+        <strong>Technical data.</strong> Standard server and hosting logs (such
+        as IP address and browser information) may be processed by our hosting
+        and infrastructure providers to deliver and secure the Service.
+      </li>
+    </ul>
+    <p>
+      We do not knowingly collect any special categories of personal data, and
+      the Service is not directed to children under the age required by your
+      local law.
+    </p>
+
+    <h2>2. How we use your information</h2>
+    <ul>
+      <li>To authenticate you and keep you signed in.</li>
+      <li>To save and display your story ratings.</li>
+      <li>To operate, maintain, and secure the Service.</li>
+    </ul>
+    <p>We do not sell your personal data or use it for advertising.</p>
+
+    <h2>3. Service providers</h2>
+    <p>
+      We rely on the following third parties, who process data on our behalf
+      under their own privacy and security terms:
+    </p>
+    <ul>
+      <li>
+        <strong>Google</strong> — authentication (Google Sign-In). See Google’s
+        Privacy Policy at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.
+      </li>
+      <li>
+        <strong>Supabase</strong> — authentication backend and database that
+        stores your account and rating data.
+      </li>
+      <li>
+        <strong>Vercel</strong> — website hosting and delivery.
+      </li>
+    </ul>
+
+    <h2>4. Data retention</h2>
+    <p>
+      We keep your account and rating data for as long as your account exists.
+      If you delete your account, or request deletion, we remove your personal
+      data within a reasonable period, except where we are required to retain it
+      by law.
+    </p>
+
+    <h2>5. Your rights</h2>
+    <p>
+      Depending on where you live, you may have the right to access, correct,
+      export, or delete your personal data, and to withdraw consent. To exercise
+      any of these rights, contact us at <a href={`mailto:${contactEmail}`}>{contactEmail}</a>. You can also revoke
+      this app’s access to your Google account at any time via your <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.
+    </p>
+
+    <h2>6. Data security</h2>
+    <p>
+      We take reasonable technical and organizational measures to protect your
+      data. However, no method of transmission or storage is completely secure,
+      and we cannot guarantee absolute security.
+    </p>
+
+    <h2>7. Changes to this policy</h2>
+    <p>
+      We may update this Privacy Policy from time to time. Material changes will
+      be reflected by updating the “Last updated” date above.
+    </p>
+
+    <h2>8. Contact</h2>
+    <p>
+      If you have any questions about this Privacy Policy, contact us at <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
+    </p>
+
+    <p class="back"><a href="/">← Back to home</a></p>
+  </main>
+
+  <style>
+    .legal {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 4rem;
+      line-height: 1.65;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #1a1a1a;
+    }
+    .legal h1 {
+      font-size: 2rem;
+      margin: 0 0 0.25rem;
+    }
+    .legal h2 {
+      font-size: 1.2rem;
+      margin: 2rem 0 0.5rem;
+    }
+    .legal .meta {
+      color: #666;
+      margin: 0 0 2rem;
+      font-size: 0.9rem;
+    }
+    .legal ul {
+      padding-left: 1.25rem;
+    }
+    .legal li {
+      margin: 0.35rem 0;
+    }
+    .legal a {
+      color: #2563eb;
+    }
+    .legal .back {
+      margin-top: 2.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      .legal {
+        color: #e6e6e6;
+      }
+      .legal .meta {
+        color: #9a9a9a;
+      }
+      .legal a {
+        color: #7ab0ff;
+      }
+    }
+  </style>
+</BaseLayout>
